@@ -14,6 +14,8 @@
     "http-errors": "~1.6.3",
     "mongoose": "^5.10.14",
     "morgan": "~1.9.1",
-    "react-router-dom": "^5.2.0"
+    "react-redux": "^7.2.2",
+    "react-router-dom": "^5.2.0",
+    "redux": "^4.0.5"
   }
 }

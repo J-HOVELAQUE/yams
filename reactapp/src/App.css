@@ -50,13 +50,15 @@
   margin: 30px;
   margin-bottom: 20px;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap;
   /* border: 3px dashed red; */
 }
 
 .dice {
-  margin: 20px;
+  margin: 10px;
   /* margin-bottom: 40px; */
 }
 
@@ -76,5 +78,6 @@
 }
 
 .command{
-  width: 80%;
+  width: auto;
+  margin-right: auto;
 }

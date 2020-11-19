@@ -4,6 +4,7 @@ import { Button, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import { Dice } from './dice.js';
+import { connect } from 'react-redux';
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max) + 1);
@@ -11,7 +12,9 @@ function getRandomInt(max) {
 
 const chiffres = ['AS', 'DEUX', 'TROIS', 'QUATRE', 'CINQ', 'SIX'];
 
-export function Game(props) {
+function Game(props) {
+
+    console.log('REDUCER', props);
 
     /// Charger une partie /////
     const loadGame = async (nameGrid) => {
@@ -27,32 +30,21 @@ export function Game(props) {
     ////Initialisation de la partie
     useEffect(() => {
         async function startGame() {
-            await fetch(`/create-grid?name=${props.match.params.gameid}`);
+            for (let i = 0; i < props.playerNames.length; i++) {
+                await fetch(`/create-grid?name=${props.playerNames[i]}`);
+            }
         };
         startGame();
-    }, [props.match.params]);
+    }, []);
 
     ///////////
     const [dicesData, setDicesData] = useState([]);
     const [total, setTotal] = useState(0);
 
+    const [activePlayer, setActivePlayer] = useState(0);
+
     const [totalRolls, setTotalRolls] = useState(0);
-    const [grid, setGrid] = useState({
-        name: props.match.params.gameid,
-        AS: "",
-        DEUX: "",
-        TROIS: "",
-        QUATRE: "",
-        CINQ: "",
-        SIX: "",
-        minimum: "",
-        maximum: "",
-        // total: "",
-        suite: "",
-        full: "",
-        carre: "",
-        yams: ""
-    });
+
 
     const [totalChiffre, setTotalChiffre] = useState(0);
     const [bonus, setBonus] = useState(0);
@@ -61,6 +53,7 @@ export function Game(props) {
     const [totalIII, setTotalIII] = useState(0);
     const [finalTotal, setFinalTotal] = useState(0);
     const [gameFinished, setGameFinished] = useState(false);
+    const [grid, setGrid] = useState(props.playerNames);
 
     //// Enregistrement de la grille
     useEffect(() => {
@@ -105,6 +98,13 @@ export function Game(props) {
 
     ///// Passer à la manche suivante /////
     const newRound = () => {
+        console.log('joueur', activePlayer);
+        console.log('longueur grille', grid.length);
+        if (activePlayer === grid.length - 1) {
+            setActivePlayer(0);
+        } else {
+            setActivePlayer(activePlayer + 1);
+        };
         setTotal(0);
         setDicesData([]);
         setTotalRolls(0);
@@ -189,11 +189,44 @@ export function Game(props) {
         }
     }
 
+    const fillNumberMulti = (numb, player) => {
+        const chiffreEnLettre = chiffres[numb - 1];
+        if (player === activePlayer) {
+            if (grid[player][chiffreEnLettre] === "") {
+                let totalNumb = 0;
+                dicesData.forEach(dice => {
+                    if (dice.value === numb) { totalNumb += (1 * numb) }
+                });
+                const update = {};
+                update[chiffreEnLettre] = totalNumb;
+                let updatedGrid = { ...grid[player], ...update };
+                let copyGrid = [...grid];
+                copyGrid[player] = updatedGrid;
+                setGrid(copyGrid);
+                setTotalChiffre(totalChiffre + totalNumb);
+                setTotalI(totalI + totalNumb);
+                newRound();
+            }
+        }
+    }
+
     ///// Remplir case maximum du joueur /////
     const fillMax = () => {
         if (grid.maximum === "") {
             const update = { maximum: total }
             setGrid({ ...grid, ...update });
+            newRound();
+        }
+    }
+
+    const fillMaxMulti = (i) => {
+        if (grid[i].maximum === "") {
+
+            const update = { maximum: total }
+            let updateGrid = { ...grid[i], ...update };
+            let newGrid = [...grid];
+            newGrid[i] = updateGrid
+            setGrid(newGrid);
             newRound();
         }
     }
@@ -288,6 +321,17 @@ export function Game(props) {
         return <Dice face={dice.value} key={i} id={i} reRoll={toReRoll} toLight={dice.toReRoll} numberOfReRoll={dice.numberOfReRoll}></Dice>
     });
 
+    console.log('GRILLE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', grid);
+    //////////////////////////////////////////////////////////////////////     Génération case de la grille    ///////////////////////////////////////////////////////////////////////////
+    const caseName = grid.map((elem) => { return (<td>{elem.name}</td>) });
+
+    const caseAs = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(1, i) }}>{elem.AS}</td>) })
+    const caseDeux = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(2, i) }}>{elem.DEUX}</td>) })
+    const caseTrois = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(3, i) }}>{elem.TROIS}</td>) })
+    const caseQuatre = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(4, i) }}>{elem.QUATRE}</td>) })
+    const caseCinq = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(5, i) }}>{elem.CINQ}</td>) })
+    const caseSix = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(6, i) }}>{elem.SIX}</td>) })
+
     ///// Rendu
     return (
         <div className="App"><div className="grille">
@@ -295,54 +339,33 @@ export function Game(props) {
                 <thead>
                     <tr>
                         <th>Joueur</th>
-                        <th>1</th>
-                        <th>2</th>
-                        <th>3</th>
-                        <th>3</th>
+                        {caseName}
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
                         <td>AS</td>
-                        <td onClick={() => { fillNumber(1) }}>{grid.AS}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseAs}
                     </tr>
                     <tr>
                         <td>DEUX</td>
-                        <td onClick={() => { fillNumber(2) }}>{grid.DEUX}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseDeux}
                     </tr>
                     <tr>
                         <td>TROIS</td>
-                        <td onClick={() => { fillNumber(3) }}>{grid.TROIS}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseTrois}
                     </tr>
                     <tr>
                         <td>QUATRE</td>
-                        <td onClick={() => { fillNumber(4) }}>{grid.QUATRE}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseQuatre}
                     </tr>
                     <tr>
                         <td>CINQ</td>
-                        <td onClick={() => { fillNumber(5) }}>{grid.CINQ}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseCinq}
                     </tr>
                     <tr>
                         <td>SIX</td>
-                        <td onClick={() => { fillNumber(6) }}>{grid.SIX}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseSix}
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>TOTAL</td>
@@ -371,6 +394,7 @@ export function Game(props) {
                     </tr>
                     <tr>
                         <td>Maximum</td>
+
                         <td onClick={() => { fillMax() }}>{grid.maximum}</td>
                         <td></td>
                         <td></td>
@@ -441,6 +465,8 @@ export function Game(props) {
             </Table>
         </div>
             <div className="command">
+                <h1>{grid[activePlayer].name}</h1>
+
                 <div className="playingTable">
 
                     {myThrow}
@@ -458,3 +484,12 @@ export function Game(props) {
         </div>
     );
 }
+
+function mapStateToProps(state) {
+    return { playerNames: state.playerNames }
+}
+
+export default connect(
+    mapStateToProps,
+    null
+)(Game);
