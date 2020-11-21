@@ -13,17 +13,11 @@ function getRandomInt(max) {
 const chiffres = ['AS', 'DEUX', 'TROIS', 'QUATRE', 'CINQ', 'SIX'];
 
 function Game(props) {
-
-    console.log('REDUCER', props);
-
     /// Charger une partie /////
     const loadGame = async (nameGrid) => {
-        // setNoUpdate(true);
         const dataGridRaw = await fetch(`/get-score/${nameGrid}`);
         const dataGrid = await dataGridRaw.json();
         console.log('Grid Loaded:', dataGrid);
-
-        // setGrid(dataGrid);
         setGrid(dataGrid.grid);
     }
 
@@ -35,6 +29,17 @@ function Game(props) {
             }
         };
         startGame();
+        let updatedTotal = [];
+
+        for (let i = 0; i < props.playerNames.length; i++) {
+            updatedTotal.push("");
+        }
+        setTotalI(updatedTotal);
+        setTotalII(updatedTotal);
+        setTotalIII(updatedTotal);
+        setTotalChiffre(updatedTotal);
+        setBonus(updatedTotal);
+        setFinalTotal(updatedTotal);
     }, []);
 
     ///////////
@@ -45,61 +50,117 @@ function Game(props) {
 
     const [totalRolls, setTotalRolls] = useState(0);
 
-
-    const [totalChiffre, setTotalChiffre] = useState(0);
-    const [bonus, setBonus] = useState(0);
-    const [totalI, setTotalI] = useState(0);
-    const [totalII, setTotalII] = useState(0);
-    const [totalIII, setTotalIII] = useState(0);
-    const [finalTotal, setFinalTotal] = useState(0);
+    const [totalChiffre, setTotalChiffre] = useState([]);
+    const [bonus, setBonus] = useState([]);
+    const [totalI, setTotalI] = useState([]);
+    const [totalII, setTotalII] = useState([]);
+    const [totalIII, setTotalIII] = useState([]);
+    const [finalTotal, setFinalTotal] = useState([]);
     const [gameFinished, setGameFinished] = useState(false);
     const [grid, setGrid] = useState(props.playerNames);
 
-    //// Enregistrement de la grille
-    useEffect(() => {
-        async function updateGrid() {
-            await fetch('/write-score', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(grid)
-            });
-        };
-        updateGrid();
+    /////////////////////////////////////////////////////     Chaque fois que la grille est modifiée     //////////////////////////////////////////////
 
-        // Vérifier si la partie est finie //
-        let isFinished = true;
-        for (const key in grid) {
-            if (grid[key] === "") {
-                console.log(grid[key]);
-                isFinished = false;
+    useEffect(() => {
+
+        let isFinish = true;
+        for (let i = 0; i < grid.length; i++) {
+
+            ///// Vérifier si mini et maxi sont rempli /////
+            if (grid[i].maximum !== "" && grid[i].minimum !== "") {
+                const update = grid[i].maximum - grid[i].minimum;
+                let updateTotalII = [...totalII];
+                updateTotalII[i] = update;
+                setTotalII(updateTotalII);
+            } else {
+                isFinish = false
             }
-        };
-        console.log('Finish?', isFinished);
-        console.log('Game ?', gameFinished);
-        if (isFinished) { setGameFinished(true) };
-    }, [grid]);
+
+            ///// Vérifier si tous les chiffres sont remplis /////
+            if (grid[i].AS !== ""
+                && grid[i].DEUX !== ""
+                && grid[i].TROIS !== ""
+                && grid[i].QUATRE !== ""
+                && grid[i].CINQ !== ""
+                && grid[i].SIX !== "") {
+                console.log('>>>>>>>>>>>>>>>>  CHIFFRES');
+                const update = grid[i].AS + grid[i].DEUX + grid[i].TROIS + grid[i].QUATRE + grid[i].CINQ + grid[i].SIX;
+                let updateTotalChiffre = [...totalChiffre];
+                updateTotalChiffre[i] = update;
+                setTotalChiffre(updateTotalChiffre);
+
+                // Calcul du bonus //
+                let playerBonus = 0
+                if (update >= 63) {
+                    playerBonus = 35
+                }
+                let newBonus = [...bonus];
+                newBonus[i] = playerBonus;
+                setBonus(newBonus);
+
+                // Mettre à jour le total I //
+                let updateTotalI = [...totalI];
+                updateTotalI[i] = update + playerBonus;
+                setTotalI(updateTotalI);
+            } else {
+                isFinish = false
+            }
+
+            ///// Vérifier que toutes les combinaisons sont remplies  /////
+            if (grid[i].suite !== ""
+                && grid[i].full !== ""
+                && grid[i].carre !== ""
+                && grid[i].yams !== "") {
+                const playerTotalIII = grid[i].full + grid[i].suite + grid[i].carre + grid[i].yams;
+                let updateTotalIII = [...totalIII];
+                updateTotalIII[i] = playerTotalIII;
+                setTotalIII(updateTotalIII);
+            } else {
+                isFinish = false
+            }
+        }
+
+        if (isFinish) {
+            setGameFinished(true)
+        }
+
+    }, [grid])
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    // //// Enregistrement de la grille
+    // useEffect(() => {
+    //     async function updateGrid() {
+    //         await fetch('/write-score', {
+    //             method: 'POST',
+    //             headers: {
+    //                 'Accept': 'application/json',
+    //                 'Content-Type': 'application/json'
+    //             },
+    //             body: JSON.stringify(grid)
+    //         });
+    //     };
+    //     updateGrid();
+
+    // }, [grid]);
 
     ///// Calculer le résultat final si la partie est terminée /////
     useEffect(() => {
-        setFinalTotal(totalI + totalII + totalIII);
-    }, [gameFinished])
+        console.log('run finish');
+        let updatedTotalFinal = [...finalTotal];
+        for (let index = 0; index < totalI.length; index++) {
+            const totalFinalPlayer = totalI[index] + totalII[index] + totalIII[index];
 
-    ///// Mise à jour du bonus si besoin /////
-    useEffect(() => {
-        if (totalChiffre >= 63) {
-            setBonus(35);
-            setTotalI(totalI + 35);
-        };
-    }, [totalChiffre]);
+            console.log('updated I', updatedTotalFinal);
+
+            updatedTotalFinal[index] = totalFinalPlayer;
+            console.log('total final pour ce joueur', index, totalFinalPlayer);
+            setFinalTotal(updatedTotalFinal)
+        }
+    }, [gameFinished])
 
 
     ///// Passer à la manche suivante /////
     const newRound = () => {
-        console.log('joueur', activePlayer);
-        console.log('longueur grille', grid.length);
         if (activePlayer === grid.length - 1) {
             setActivePlayer(0);
         } else {
@@ -173,22 +234,6 @@ function Game(props) {
     }
 
     ///// Remplir la case des Chiffres /////
-    const fillNumber = (numb) => {
-        const chiffreEnLettre = chiffres[numb - 1];
-        if (grid[chiffreEnLettre] === "") {
-            let totalNumb = 0;
-            dicesData.forEach(dice => {
-                if (dice.value === numb) { totalNumb += (1 * numb) }
-            });
-            const update = {};
-            update[chiffreEnLettre] = totalNumb;
-            setGrid({ ...grid, ...update });
-            setTotalChiffre(totalChiffre + totalNumb);
-            setTotalI(totalI + totalNumb);
-            newRound();
-        }
-    }
-
     const fillNumberMulti = (numb, player) => {
         const chiffreEnLettre = chiffres[numb - 1];
         if (player === activePlayer) {
@@ -203,117 +248,124 @@ function Game(props) {
                 let copyGrid = [...grid];
                 copyGrid[player] = updatedGrid;
                 setGrid(copyGrid);
-                setTotalChiffre(totalChiffre + totalNumb);
-                setTotalI(totalI + totalNumb);
                 newRound();
             }
         }
     }
 
     ///// Remplir case maximum du joueur /////
-    const fillMax = () => {
-        if (grid.maximum === "") {
-            const update = { maximum: total }
-            setGrid({ ...grid, ...update });
-            newRound();
-        }
-    }
-
     const fillMaxMulti = (i) => {
         if (grid[i].maximum === "") {
-
-            const update = { maximum: total }
-            let updateGrid = { ...grid[i], ...update };
-            let newGrid = [...grid];
-            newGrid[i] = updateGrid
-            setGrid(newGrid);
-            newRound();
+            if (activePlayer === i) {
+                const update = { maximum: total }
+                let updateGrid = { ...grid[i], ...update };
+                let newGrid = [...grid];
+                newGrid[i] = updateGrid
+                setGrid(newGrid);
+                newRound();
+            }
         }
     }
 
     ///// Remplir case minimum du joueur /////
-    const fillMin = () => {
-        if (grid.minimum === "") {
-            const update = { minimum: total }
-            setGrid({ ...grid, ...update });
-            newRound();
+    const fillMinMulti = (i) => {
+        if (grid[i].minimum === "") {
+            if (activePlayer === i) {
+                const update = { minimum: total }
+                let updateGrid = { ...grid[i], ...update };
+                let newGrid = [...grid];
+                newGrid[i] = updateGrid
+                setGrid(newGrid);
+                newRound();
+            }
         }
     }
 
     ///// Remplir la case de la suite /////
-    const fillSuite = () => {
-        const values = dicesData.map((dice) => { return dice.value });
-        const sortedValues = values.sort();
-        console.log('trié', sortedValues);
-        let validate = true;
-        for (let i = 0; i < sortedValues.length; i++) {
-            if ((sortedValues[i] - 1 !== (sortedValues[i - 1]) && (i !== 0))) {
-                validate = false
-            }
-        };
-        let point = 0;
-        if (validate) { point = 30 };
+    const fillSuiteMulti = (player) => {
+        if (grid[player].suite === "") {
+            if (player === activePlayer) {
+                const values = dicesData.map((dice) => { return dice.value });
+                const sortedValues = values.sort();
+                console.log('trié', sortedValues);
+                let validate = true;
+                for (let i = 0; i < sortedValues.length; i++) {
+                    if ((sortedValues[i] - 1 !== (sortedValues[i - 1]) && (i !== 0))) {
+                        validate = false
+                    }
+                };
+                let point = 0;
+                if (validate) { point = 30 };
 
-        const update = {};
-        update.suite = point;
-        setGrid({ ...grid, ...update });
-        setTotalIII(totalIII + point);
-        newRound();
+                const update = {};
+                update.suite = point;
+                let updatedGrid = { ...grid[player], ...update };
+                let newGrid = [...grid];
+                newGrid[player] = updatedGrid;
+                setGrid(newGrid);
+                newRound();
+            }
+        }
     }
 
     ///// Remplir la case du full /////
-    const fillFull = () => {
-        if (grid.full === "") {
-            let validateThree = false;
-            let validateTwo = false;
-            const dicesToObject = diceDataToObject();
-            for (const property in dicesToObject) {
-                if (dicesToObject[property] === 3) {
-                    validateThree = true;
+    const fillFullMulti = (player) => {
+        if (grid[player].full === "") {
+            if (player === activePlayer) {
+                let validateThree = false;
+                let validateTwo = false;
+                const dicesToObject = diceDataToObject();
+                for (const property in dicesToObject) {
+                    if (dicesToObject[property] === 3) {
+                        validateThree = true;
+                    }
+                };
+                for (const property in dicesToObject) {
+                    if (dicesToObject[property] === 2) {
+                        validateTwo = true
+                    }
                 }
-            };
-            for (const property in dicesToObject) {
-                if (dicesToObject[property] === 2) {
-                    validateTwo = true
-                }
+                let point = 0;
+                if (validateTwo === true && validateThree === true) { point = 30 };
+
+                const update = {};
+                update.full = point;
+                let updatedGrid = { ...grid[player], ...update };
+                let newGrid = [...grid];
+                newGrid[player] = updatedGrid;
+                setGrid(newGrid);
+                newRound();
             }
-
-            let point = 0;
-            if (validateTwo === true && validateThree === true) { point = 30 };
-
-            const update = {};
-            // update.full = total;
-            update.full = point;
-            setGrid({ ...grid, ...update });
-            setTotalIII(totalIII + point);
-            newRound();
-
         }
     }
 
-    ///// Remplir la case du carré /////
-    const fillFigure = (nomCombin, toReach) => {
-        if (grid[nomCombin] === "") {
-            let validate = false;
-            const dicesToObject = diceDataToObject();
-            // console.log(dicesToObject);
-            for (const property in dicesToObject) {
-                if (dicesToObject[property] >= toReach) {
-                    validate = true;
+    ///// Remplir la case du carré ou du yams/////
+    const fillFigureMulti = (nomCombin, toReach, player) => {
+        if (grid[player][nomCombin] === "") {
+            if (player === activePlayer) {
+                let validate = false;
+                const dicesToObject = diceDataToObject();
+
+                for (const property in dicesToObject) {
+                    if (dicesToObject[property] >= toReach) {
+                        validate = true;
+                    }
                 }
-            }
 
-            let point = 0;
-            if (validate) {
-                point = toReach * 10
+                let point = 0;
+                if (validate) {
+                    point = toReach * 10;
+                    console.log('CARRE OK');
+                }
+                const update = {};
+                update[nomCombin] = point;
+                let updatedGrid = { ...grid[player], ...update };
+                let newGrid = [...grid];
+                newGrid[player] = updatedGrid;
+                setGrid(newGrid);
+                newRound();
             }
-            const update = {};
-            update[nomCombin] = point;
-            setTotalIII(totalIII + point);
-            setGrid({ ...grid, ...update });
-            newRound();
         }
-
     }
 
     ///// Génération des dés /////
@@ -321,16 +373,30 @@ function Game(props) {
         return <Dice face={dice.value} key={i} id={i} reRoll={toReRoll} toLight={dice.toReRoll} numberOfReRoll={dice.numberOfReRoll}></Dice>
     });
 
-    console.log('GRILLE >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', grid);
     //////////////////////////////////////////////////////////////////////     Génération case de la grille    ///////////////////////////////////////////////////////////////////////////
     const caseName = grid.map((elem) => { return (<td>{elem.name}</td>) });
 
-    const caseAs = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(1, i) }}>{elem.AS}</td>) })
-    const caseDeux = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(2, i) }}>{elem.DEUX}</td>) })
-    const caseTrois = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(3, i) }}>{elem.TROIS}</td>) })
-    const caseQuatre = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(4, i) }}>{elem.QUATRE}</td>) })
-    const caseCinq = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(5, i) }}>{elem.CINQ}</td>) })
-    const caseSix = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(6, i) }}>{elem.SIX}</td>) })
+    const caseAs = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(1, i) }}>{elem.AS}</td>) });
+    const caseDeux = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(2, i) }}>{elem.DEUX}</td>) });
+    const caseTrois = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(3, i) }}>{elem.TROIS}</td>) });
+    const caseQuatre = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(4, i) }}>{elem.QUATRE}</td>) });
+    const caseCinq = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(5, i) }}>{elem.CINQ}</td>) });
+    const caseSix = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(6, i) }}>{elem.SIX}</td>) });
+
+    const caseMaxi = grid.map((elem, i) => { return (<td onClick={() => { fillMaxMulti(i) }}>{elem.maximum}</td>) });
+    const caseMini = grid.map((elem, i) => { return (<td onClick={() => { fillMinMulti(i) }}>{elem.minimum}</td>) });
+
+    const caseSuite = grid.map((elem, i) => { return (<td onClick={() => { fillSuiteMulti(i) }}>{elem.suite}</td>) });
+    const caseFull = grid.map((elem, i) => { return (<td onClick={() => { fillFullMulti(i) }}>{elem.full}</td>) });
+    const caseCarre = grid.map((elem, i) => { return (<td onClick={() => { fillFigureMulti('carre', 4, i) }}>{elem.carre}</td>) });
+    const caseYams = grid.map((elem, i) => { return (<td onClick={() => { fillFigureMulti('yams', 5, i) }}>{elem.yams}</td>) });
+
+    const caseTotalChiffre = grid.map((elem, i) => { return (<td>{totalChiffre[i]}</td>) });
+    const caseBonus = grid.map((elem, i) => { return (<td>{bonus[i]}</td>) });
+    const caseTotalI = grid.map((elem, i) => { return (<td>{totalI[i]}</td>) });
+    const caseTotalII = grid.map((elem, i) => { return (<td>{totalII[i]}</td>) });
+    const caseTotalIII = grid.map((elem, i) => { return (<td>{totalIII[i]}</td>) });
+    const caseFinalTotal = grid.map((elem, i) => { return (<td>{finalTotal[i]}</td>) });
 
     ///// Rendu
     return (
@@ -369,96 +435,51 @@ function Game(props) {
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>TOTAL</td>
-                        <td>
-                            {(grid.AS !== "" && grid.DEUX !== "" && grid.TROIS !== "" && grid.QUATRE !== "" && grid.CINQ !== "" && grid.SIX !== "") ? totalChiffre : null}
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseTotalChiffre}
                     </tr>
                     <tr>
                         <td>BONUS</td>
-                        <td>{bonus}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseBonus}
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>TOTAL I</td>
-                        <td>
-                            {(grid.AS !== "" && grid.DEUX !== "" && grid.TROIS !== "" && grid.QUATRE !== "" && grid.CINQ !== "" && grid.SIX !== "") ? totalI : null}
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseTotalI}
                     </tr>
                     <tr>
                         <td>Maximum</td>
-
-                        <td onClick={() => { fillMax() }}>{grid.maximum}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseMaxi}
                     </tr>
                     <tr>
                         <td>Minimum</td>
-                        <td onClick={() => { fillMin() }}>{grid.minimum}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseMini}
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>TOTAL II</td>
-                        <td>{(grid.minimum !== "" && grid.maximum !== "") ? grid.maximum - grid.minimum : null}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseTotalII}
                     </tr>
                     <tr>
                         <td>SUITE</td>
-                        <td onClick={() => { fillSuite() }}>{grid.suite}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseSuite}
                     </tr>
                     <tr>
                         <td>FULL</td>
-                        <td onClick={() => { fillFull() }}>{grid.full}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseFull}
                     </tr>
                     <tr>
                         <td>CARRE</td>
-                        <td onClick={() => { fillFigure('carre', 4) }}>{grid.carre}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseCarre}
                     </tr>
                     <tr>
                         <td>YAM</td>
-                        <td onClick={() => { fillFigure('yams', 5) }}>{grid.yams}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseYams}
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>TOTAL III</td>
-                        <td>
-                            {(grid.full !== "" && grid.carre !== "" && grid.suite !== "" && grid.yams !== "") ? totalIII : null}
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseTotalIII}
                     </tr>
                     <tr>
                         <td style={{ color: "red" }}>SCORE FINAL</td>
-                        <td>
-                            {gameFinished ? finalTotal : null}
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        {caseFinalTotal}
                     </tr>
 
                 </tbody>
@@ -471,7 +492,6 @@ function Game(props) {
 
                     {myThrow}
                 </div>
-                {/* <button onClick={() => { rollDices(5) }}>Roll</button> */}
                 <div>
                     <Button variant="outline-success" className="button" onClick={() => { rollDices(5) }}>Roll</Button>
                     <Button variant="outline-success" className="button" onClick={() => { reRoll() }}>Re-Roll</Button>
