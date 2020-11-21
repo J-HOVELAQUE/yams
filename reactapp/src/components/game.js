@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import '../App.css';
 import { Button, Table } from 'react-bootstrap';
@@ -14,18 +15,18 @@ const chiffres = ['AS', 'DEUX', 'TROIS', 'QUATRE', 'CINQ', 'SIX'];
 
 function Game(props) {
     /// Charger une partie /////
-    const loadGame = async (nameGrid) => {
-        const dataGridRaw = await fetch(`/get-score/${nameGrid}`);
-        const dataGrid = await dataGridRaw.json();
-        console.log('Grid Loaded:', dataGrid);
-        setGrid(dataGrid.grid);
-    }
+    // const loadGame = async (nameGrid) => {
+    //     const dataGridRaw = await fetch(`/get-score/${nameGrid}`);
+    //     const dataGrid = await dataGridRaw.json();
+    //     console.log('Grid Loaded:', dataGrid);
+    //     setGrid(dataGrid.grid);
+    // }
 
     ////Initialisation de la partie
     useEffect(() => {
         async function startGame() {
             for (let i = 0; i < props.playerNames.length; i++) {
-                await fetch(`/create-grid?name=${props.playerNames[i]}`);
+                await fetch(`/create-grid?name=${props.playerNames[i].name}`);
             }
         };
         startGame();
@@ -49,6 +50,7 @@ function Game(props) {
     const [activePlayer, setActivePlayer] = useState(0);
 
     const [totalRolls, setTotalRolls] = useState(0);
+    const [actualRound, setActualRound] = useState(false);
 
     const [totalChiffre, setTotalChiffre] = useState([]);
     const [bonus, setBonus] = useState([]);
@@ -62,6 +64,19 @@ function Game(props) {
     /////////////////////////////////////////////////////     Chaque fois que la grille est modifiée     //////////////////////////////////////////////
 
     useEffect(() => {
+
+
+        async function updateGrid() {
+            await fetch('/write-score', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(grid)
+            });
+        };
+        updateGrid();
 
         let isFinish = true;
         for (let i = 0; i < grid.length; i++) {
@@ -127,22 +142,6 @@ function Game(props) {
     }, [grid])
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    // //// Enregistrement de la grille
-    // useEffect(() => {
-    //     async function updateGrid() {
-    //         await fetch('/write-score', {
-    //             method: 'POST',
-    //             headers: {
-    //                 'Accept': 'application/json',
-    //                 'Content-Type': 'application/json'
-    //             },
-    //             body: JSON.stringify(grid)
-    //         });
-    //     };
-    //     updateGrid();
-
-    // }, [grid]);
-
     ///// Calculer le résultat final si la partie est terminée /////
     useEffect(() => {
         console.log('run finish');
@@ -169,6 +168,7 @@ function Game(props) {
         setTotal(0);
         setDicesData([]);
         setTotalRolls(0);
+        setActualRound(!actualRound);
     }
 
     ///// Jeter les dé //////
@@ -184,6 +184,7 @@ function Game(props) {
         setDicesData(lance);
         updateTotal(lance);
         setTotalRolls(1);
+        setActualRound(!actualRound);
     };
 
     ///// Rejeter les dés sélectionné //////
@@ -493,9 +494,12 @@ function Game(props) {
                     {myThrow}
                 </div>
                 <div>
-                    <Button variant="outline-success" className="button" onClick={() => { rollDices(5) }}>Roll</Button>
-                    <Button variant="outline-success" className="button" onClick={() => { reRoll() }}>Re-Roll</Button>
-                    <Button variant="outline-success" className="button" onClick={() => { loadGame('toto') }}>Load Game</Button>
+                    {actualRound ?
+                        <Button variant="outline-success" className="button" onClick={() => { reRoll() }}>Re-Roll</Button> :
+                        <Button variant="outline-success" className="button" onClick={() => { rollDices(5) }}>Roll</Button>
+
+                    }
+                    {/* <Button variant="outline-success" className="button" onClick={() => { loadGame('toto') }}>Load Game</Button> */}
                 </div>
                 <h1>Total: {total}  Roll: {totalRolls}</h1>
 

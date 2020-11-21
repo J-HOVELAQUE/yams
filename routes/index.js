@@ -10,28 +10,32 @@ router.get('/', function (req, res, next) {
 });
 
 router.post('/write-score', async function (req, res, next) {
-  console.log(req.body);
-  await GridModel.updateOne({ name: req.body.name },
-    {
-      AS: req.body.AS,
-      DEUX: req.body.DEUX,
-      TROIS: req.body.TROIS,
-      QUATRE: req.body.QUATRE,
-      CINQ: req.body.CINQ,
-      SIX: req.body.SIX,
-      minimum: req.body.minimum,
-      maximum: req.body.maximum,
-      total: req.body.total
-    });
+
+  req.body.forEach(async (grid) => {
+    console.log(grid);
+
+    await GridModel.updateOne({ name: grid.name },
+      {
+        AS: grid.AS,
+        DEUX: grid.DEUX,
+        TROIS: grid.TROIS,
+        QUATRE: grid.QUATRE,
+        CINQ: grid.CINQ,
+        SIX: grid.SIX,
+        minimum: grid.minimum,
+        maximum: grid.maximum,
+        suite: grid.suite,
+        full: grid.full,
+        carre: grid.carre,
+        yams: grid.yams
+      });
+  });
   res.json({ message: 'grid update ok' });
 });
 
 router.get('/create-grid', async function (req, res, next) {
   const newGrid = new GridModel({
-    name: req.query.name,
-    maximum: 0,
-    minimum: 0,
-    total: 0
+    name: req.query.name
   });
   res.json({ message: 'grid created' });
   await newGrid.save();
