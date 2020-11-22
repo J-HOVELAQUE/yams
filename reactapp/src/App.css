@@ -81,3 +81,31 @@
   width: auto;
   margin-right: auto;
 }
+
+input{
+  margin:10px !important;
+  
+}
+
+.formulaire {
+  border: 1px black solid;
+  margin: 30px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px;
+  width: 200px;
+  /* height: 200px; */
+}
+
+.formulaire p {
+  font-size: 15px;
+  margin: 0;
+}
+
+.hallOfFame {
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}

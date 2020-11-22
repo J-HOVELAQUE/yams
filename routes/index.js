@@ -41,10 +41,8 @@ router.get('/create-grid', async function (req, res, next) {
   await newGrid.save();
 });
 
-router.get('/get-score/:playerName', async function (req, res, next) {
-  console.log('PROCESS');
-  console.log('JOUEUR', req.params.playerName);
-  const userGrid = await GridModel.findOne({ name: req.params.playerName });
+router.get('/get-score', async function (req, res, next) {
+  const userGrid = await GridModel.find();
   res.json({
     message: 'get data',
     grid: userGrid

@@ -499,7 +499,6 @@ function Game(props) {
                         <Button variant="outline-success" className="button" onClick={() => { rollDices(5) }}>Roll</Button>
 
                     }
-                    {/* <Button variant="outline-success" className="button" onClick={() => { loadGame('toto') }}>Load Game</Button> */}
                 </div>
                 <h1>Total: {total}  Roll: {totalRolls}</h1>
 
