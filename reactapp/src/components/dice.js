@@ -30,9 +30,6 @@ export function Dice(props) {
         diceStyle = {
             height: "60px",
             width: "60px",
-            // border: "1px solid solid",
-            // backgroundColor: "yellow",
-            // margin: "5px",
             border: "2px solid red"
         };
     }
@@ -40,9 +37,6 @@ export function Dice(props) {
         diceStyle = {
             height: "60px",
             width: "60px",
-            // border: "1px solid solid",
-            // backgroundColor: "yellow",
-            // margin: "5px",
             border: "none"
         };
     }

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import '../App.css';
-// import { Button, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Redirect } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
@@ -61,10 +60,6 @@ function Home(props) {
             {startGame ? <Redirect to='/new-game' /> : null}
             {goToHall ? <Redirect to='/hall-of-fame' /> : null}
 
-
-            {/* <button onClick={() => { removePlayer() }}>Remove Player</button>
-            <button onClick={() => { addPlayer() }}>Add Player</button>
-            <button onClick={() => { startNewGame() }}>New game</button> */}
             <Button variant="outline-success" className="button" onClick={() => { removePlayer() }}>Remove Player</Button>
             <Button variant="outline-success" className="button" onClick={() => { addPlayer() }}>Add Player</Button>
             <Button variant="outline-success" className="button" onClick={() => { startNewGame() }}>New game</Button>

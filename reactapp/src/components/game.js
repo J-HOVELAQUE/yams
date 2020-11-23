@@ -6,6 +6,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import { Dice } from './dice.js';
 import { connect } from 'react-redux';
+import { Redirect } from 'react-router-dom';
 
 function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max) + 1);
@@ -14,15 +15,7 @@ function getRandomInt(max) {
 const chiffres = ['AS', 'DEUX', 'TROIS', 'QUATRE', 'CINQ', 'SIX'];
 
 function Game(props) {
-    /// Charger une partie /////
-    // const loadGame = async (nameGrid) => {
-    //     const dataGridRaw = await fetch(`/get-score/${nameGrid}`);
-    //     const dataGrid = await dataGridRaw.json();
-    //     console.log('Grid Loaded:', dataGrid);
-    //     setGrid(dataGrid.grid);
-    // }
 
-    ////Initialisation de la partie
     useEffect(() => {
         async function startGame() {
             for (let i = 0; i < props.playerNames.length; i++) {
@@ -327,7 +320,7 @@ function Game(props) {
                     }
                 }
                 let point = 0;
-                if (validateTwo === true && validateThree === true) { point = 30 };
+                if (validateTwo === true && validateThree === true) { point = 25 };
 
                 const update = {};
                 update.full = point;
@@ -374,7 +367,7 @@ function Game(props) {
         return <Dice face={dice.value} key={i} id={i} reRoll={toReRoll} toLight={dice.toReRoll} numberOfReRoll={dice.numberOfReRoll}></Dice>
     });
 
-    //////////////////////////////////////////////////////////////////////     Génération case de la grille    ///////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////     Génération cases de la grille    ///////////////////////////////////////////////////////////////////////////
     const caseName = grid.map((elem) => { return (<td>{elem.name}</td>) });
 
     const caseAs = grid.map((elem, i) => { return (<td onClick={() => { fillNumberMulti(1, i) }}>{elem.AS}</td>) });
@@ -402,6 +395,7 @@ function Game(props) {
     ///// Rendu
     return (
         <div className="App"><div className="grille">
+            {gameFinished ? <Redirect to='/' /> : null}
             <Table striped bordered hover variant="dark" className='grille'>
                 <thead>
                     <tr>

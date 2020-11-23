@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import '../App.css';
-// import { Button, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Redirect } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
@@ -42,7 +41,7 @@ function HallOfFame(props) {
 
             ///// Trier les scores avec le résultat final /////
             const sortedScores = response.sort(function (a, b) {
-                return a.totalFinal - b.totalFinal;
+                return b.totalFinal - a.totalFinal;
             });
 
             setScores(sortedScores);
